@@ -2,6 +2,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 // miniWeather
 // Author: Matt Norman <normanmr@ornl.gov>  , Oak Ridge National Laboratory
+// Modified by: Camille Coti, LIPN, Université Sorbonne Paris Nord
 // This code simulates dry, stratified, compressible, non-hydrostatic fluid flows
 // For documentation, please see the attached documentation in the "documentation" folder
 //

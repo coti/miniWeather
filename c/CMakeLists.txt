@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
-project(miniWeather CXX)
+project(miniWeather CXX C)
 
 enable_testing()
 
@@ -33,6 +33,16 @@ if ("${PNETCDF_PATH}" STREQUAL "")
   MESSAGE(FATAL_ERROR "ERROR: PNETCDF_PATH CMake variable not set.\n"
                       "miniWeather requires a parallel-netcdf installation <https://trac.mcs.anl.gov/projects/parallel-netcdf>.\n"
                       "Specify -DPNETCDF_PATH=/path/to/pnetcdf in your cmake configure line.\n\n")
+endif()
+
+
+############################################################
+## Check for NetCDF
+############################################################
+if ("${NETCDF_PATH}" STREQUAL "")
+  MESSAGE(FATAL_ERROR "ERROR: NETCDF_PATH CMake variable not set.\n"
+                      "miniWeather requires a netcdf installation <https://trac.mcs.anl.gov/projects/parallel-netcdf>.\n"
+                      "Specify -PNETCDF_PATH=/path/to/netcdf in your cmake configure line.\n\n")
 endif()
 
 
@@ -109,7 +119,7 @@ endif()
 ############################################################
 # If user didn't specify an OpenACC-capable compiler list, then create one
 if ("${OPENACC_LIST}" STREQUAL "")
-  SET(OPENACC_LIST GNU PGI)
+  SET(OPENACC_LIST GNU PGI Clang)
   MESSAGE(STATUS "OpenACC-capable list is: ${OPENACC_LIST}")
 endif()
 
@@ -133,7 +143,7 @@ endif()
 
 
 if (${DO_OPENACC})
-  MESSAGE(STATUS "Compiling OpenACC code with ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} using the flags: ${OPENACC_FLAGS}")
+  MESSAGE(STATUS "Compiling OpenACC code with ${CMAKE_C_COMPILER_ID} ${CMAKE_C_COMPILER_VERSION} using the flags: ${OPENACC_FLAGS}")
   ############################################################
   ## Compile the MPI + OpenACC version
   ############################################################
@@ -144,15 +154,15 @@ if (${DO_OPENACC})
     SET(OPENACC_LINK_FLAGS ${OPENACC_FLAGS})
   endif()
 
-  add_executable(openacc miniWeather_mpi_openacc.cpp)
-  target_include_directories(openacc PUBLIC ${PNETCDF_PATH}/include)
+  add_executable(openacc miniWeather_openacc.c)
+  target_include_directories(openacc PUBLIC ${NETCDF_PATH}/include)
   set_target_properties(openacc PROPERTIES COMPILE_FLAGS "${EXE_DEFS} ${OPENACC_FLAGS}")
-  set(_LIBS "-L${PNETCDF_PATH}/lib -lpnetcdf ${OPENACC_LINK_FLAGS} ${LDFLAGS}")
+  set(_LIBS "-L${NETCDF_PATH}/lib64 -lnetcdf ${OPENACC_LINK_FLAGS} ${LDFLAGS} -lm")
   string(STRIP "${_LIBS}" _LIBS)
   target_link_libraries(openacc "${_LIBS}")
 
-  add_executable(openacc_test miniWeather_mpi_openacc.cpp)
-  target_include_directories(openacc_test PUBLIC ${PNETCDF_PATH}/include)
+  add_executable(openacc_test miniWeather_openacc.c)
+  target_include_directories(openacc_test PUBLIC ${NETCDF_PATH}/include)
   set_target_properties(openacc_test PROPERTIES COMPILE_FLAGS "${TEST_DEFS} ${OPENACC_FLAGS}")
   target_link_libraries(openacc_test "${_LIBS}")
 
@@ -167,7 +177,7 @@ endif()
 ############################################################
 # If user didn't specify an OpenMP4.5-capable compiler list, then create one
 if ("${OPENMP45_LIST}" STREQUAL "")
-  SET(OPENMP45_LIST XL GNU)
+  SET(OPENMP45_LIST XL GNU Clang)
   MESSAGE(STATUS "OpenMP4.5-capable list is: ${OPENMP45_LIST}")
 endif()
 
